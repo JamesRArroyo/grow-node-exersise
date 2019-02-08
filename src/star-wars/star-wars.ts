@@ -30,8 +30,21 @@ export class StarWarsAPI {
   }
  
   private getPlanets = async (req: express.Request, res: express.Response) => {
-    const url = `${this.rootUrl}/planets`;
-    const planets = await this.getAllRecords(url);
+    const peopleUrl = `${this.rootUrl}/people`;
+    const planetsUrl = `${this.rootUrl}/planets`;
+
+    const records = await Promise.all([this.getAllRecords(planetsUrl), this.getAllRecords(peopleUrl)]);
+    const planets: Planet[]  = <Planet[]> records[0];
+    const people: Person[] = <Person[]>records[1];
+
+    // Create people map
+    let peopleMap = {};
+    people.forEach((p: Person) => peopleMap[p.url] = p);
+
+    // Map planet residents
+    planets.forEach((planet: Planet) => {
+      planet.residents = planet.residents.map((resident: string) => peopleMap[resident]);
+    })
 
     res.send(planets);
   }
