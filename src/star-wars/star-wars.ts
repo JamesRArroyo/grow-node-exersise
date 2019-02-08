@@ -18,7 +18,13 @@ export class StarWarsAPI {
  
   private getPeople = async (req: express.Request, res: express.Response) => {
     const url = `${this.rootUrl}/people`;
-    const people = await this.getAllRecords(url);
+    const queryParams = req.query;
+    let people = await this.getAllRecords(url);
+    
+    // Query Params
+    if(queryParams.sortBy) {
+      people = this.sortBy(<Person[]>people, queryParams.sortBy);
+    }
 
     res.send(people);
   }
@@ -28,6 +34,22 @@ export class StarWarsAPI {
     const planets = await this.getAllRecords(url);
 
     res.send(planets);
+  }
+
+  private sortBy(people: Person[], param: string): Person[] {
+    const key = param.toLowerCase();
+    switch (key) {
+        case 'name':
+            return people.sort((a: any, b: any) => {
+                return (a[key] < b[key]) ? -1 : (a[key] > b[key]) ? 1 : 0;
+            });
+        case 'mass':
+        case 'height':
+            return people.sort((a: any, b: any) => a[key] - b[key]);
+        default:
+            console.info(`INFO | Unsupported sorting param attempt: ${param}`);
+            return people;
+        }
   }
 
 
